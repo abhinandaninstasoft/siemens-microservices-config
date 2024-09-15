@@ -1,0 +1,46 @@
+services:
+  config-server:
+    image: siemens-ms-config-server:latest
+    container_name: config-server2
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_SECURITY_USER_NAME=admin
+      - SPRING_SECURITY_USER_PASSWORD=admin123
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin:9411
+      - SPRING_SLEUTH_SAMPLER_RATE=1.0
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-u",
+          "admin:admin123",
+          "-f",
+          "http://localhost:8888/actuator/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - zipkin
+    networks:
+      - custom-network
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin2
+    ports:
+      - "9411:9411"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9411/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - custom-network2
+
+networks:
+  custom-network2:
+    external: true
+    driver: bridge
